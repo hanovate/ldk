@@ -1,0 +1,36 @@
+{
+  "name": "unmit/ldk",
+  "description": "UNM IT Laravel Development Kit",
+  "type": "service",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Unmit\\ldk\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Unmit\\ldk\\Tests\\": "tests/"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^7.5",
+    "orchestra/testbench": "3.7"
+  },"authors": [
+    {
+      "name": "Ron Estrada",
+      "email": "rvestra@unm.edu"
+    },{
+      "name": "Michael Han",
+      "email": "mhan1@unm.edu"
+    }
+  ],
+  "extra": {
+    "laravel": {
+      "dont-discover": [],
+      "providers": [
+        "Unmit\\ldk\\LdkServiceProvider"
+      ]
+    }
+  }
+}
