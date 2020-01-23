@@ -103,10 +103,10 @@ abstract class AbstractApiController extends Controller
                     $payload->setDataArray($data);
                     break;
                 case 'object':
-                    $payload->setDataObject($data);
+                    $payload->setDataArray($data->toArray());
                     break;
                 default:
-                    $payload->setErrors(['message' => 'data type unmatched']);
+                    $payload->setErrors(['message' => 'model response data type unmatched']);
                     break;
             }
         }
