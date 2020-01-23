@@ -3,7 +3,7 @@
 namespace Unmit\ldk\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Payload;
+use Unmit\ldk\Http\Payload;
 use http\Exception\InvalidArgumentException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
