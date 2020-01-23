@@ -129,7 +129,7 @@ class Payload
     /**
      * @return array
      */
-    public function toArrayWithMeta()
+    public function toArray()
     {
         $output = array();
         // links.self the full url invoked to get this

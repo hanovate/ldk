@@ -77,28 +77,40 @@ abstract class AbstractApiController extends Controller
     {
         // initialize payload array
         $payload = new Payload();
+        // get id column name
+        $bo = $this->getResourceModel()->getBusinessObject();
+        if(isset($bo))
+        {
+            $payload->setId($bo->getIdColumnName());
+        }
 
-        // can be Collection, array, string, Model
-        if (!empty($data)) {
-            // data content is found here
-            $payload->setData($data);
-        } elseif(!empty($errors)) {
+        // links.self the full url invoked to get this
+        $payload->setLink('self',$request->fullUrl());
+        if(!empty($errors)) {
             // there's no data, so return an empty array
             $payload->setErrors($errors);
         }
-        // get meta values if turned on
-        if (config('api.metadata',true)) {
-            // links.self the full url invoked to get this
-            $payload->setLink('self',$request->fullUrl());
-
-            // get primary key name
-            $bo = $this->getResourceModel()->getBusinessObject();
-            if(isset($bo))
-            {
-                $payload->setId($bo->getIdColumnName());
+        else
+        {
+            // data can be Collection, array, string, Model
+            $dataType = gettype($data);
+            switch ($dataType) {
+                case 'string':
+                    // default to id
+                    $payload->setDataString($data);
+                    break;
+                case 'array':
+                    $payload->setDataArray($data);
+                    break;
+                case 'object':
+                    $payload->setDataObject($data);
+                    break;
+                default:
+                    $payload->setErrors(['message' => 'data type unmatched']);
+                    break;
             }
-            return $payload->toArraywithMeta();
         }
+
         return $payload;
     }
 
@@ -220,19 +232,29 @@ abstract class AbstractApiController extends Controller
         // TODO: add more parameters here & below (e.g. sort, orderby, etc)
         // set whereColumn parameter
         // get objects and pass on the parameters
+        $data = null;
+        $errors = null;
+        try
+        {
+            $columns = \DB::raw(implode(',',$this->getResourceModel()->getBusinessObject()->getNameToColumnNameArray()));
+            $obj = $this->getResourceModel()->search($searchstr)->select($columns)
+                ->when($limit,function($query,$limit) {
+                    return $query->limit($limit); // limit
+                })->when($offset,function($query,$offset) {
+                    return $query->offset($offset);  // offset
+                })->get();
 
-        $columns = \DB::raw(implode(',',$this->getResourceModel()->getBusinessObject()->getNameToColumnNameArray()));
-        $obj = $this->getResourceModel()->search($searchstr)->select($columns)
-            ->when($limit,function($query,$limit) {
-            return $query->limit($limit); // limit
-            })->when($offset,function($query,$offset) {
-                return $query->offset($offset);  // offset
-            })->get();
+            $total_records = $obj->count();
+            $data = $obj->toArray();
+        }
+        catch(\Exception $e)
+        {
+            $errors[] = $e->getCode().':'.$e->getMessage();
+        }
 
-        $total_records = $obj->count();
 
         // get payload
-        $payload = $this->getPayload($request,$obj);
+        $payload = $this->getPayload($request,$data,$errors);
 
         // BEGIN - add more to data envelope
 
