@@ -1,9 +1,9 @@
 <?php
 
-namespace Unmit\ldk;
+namespace Unmit\ldk\BusinessObjects;
 
 use http\Exception\InvalidArgumentException;
-use Unmit\ldk\BusinessObjectInterface;
+use Unmit\ldk\BusinessObjects\BusinessObjectInterface;
 use Illuminate\Support\Collection;
 
 /**
