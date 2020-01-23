@@ -221,12 +221,13 @@ abstract class AbstractApiController extends Controller
         // set whereColumn parameter
         // get objects and pass on the parameters
 
-
-        $obj = $this->getResourceModel()->search($searchstr)->select(\DB::raw(implode(',',$this->getResourceModel()->getBusinessObject()->getNameToColumnNameArray())))->when($limit,function($query,$limit) {
+        $columns = \DB::raw(implode(',',$this->getResourceModel()->getBusinessObject()->getNameToColumnNameArray()));
+        $obj = $this->getResourceModel()->search($searchstr)->select($columns)
+            ->when($limit,function($query,$limit) {
             return $query->limit($limit); // limit
-        })->when($offset,function($query,$offset) {
-            return $query->offset($offset);  // offset
-        })->get();
+            })->when($offset,function($query,$offset) {
+                return $query->offset($offset);  // offset
+            })->get();
 
         $total_records = $obj->count();
 
