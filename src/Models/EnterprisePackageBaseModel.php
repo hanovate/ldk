@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\MassAssignmentException;
 use DB;
 use PDOException;
 use PDOStatement;
-use Unmit\ldk\BusinessObjectInterface;
+use Unmit\ldk\BusinessObjects\BusinessObjectInterface;
 use JsonSerializable;
 use Illuminate\Database\Eloquent\Concerns\HasAttributes;
 use Illuminate\Database\Eloquent\Concerns\HidesAttributes;

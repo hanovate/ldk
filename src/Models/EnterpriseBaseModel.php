@@ -4,7 +4,7 @@ namespace Unmit\ldk\Models;
 
 use http\Exception\InvalidArgumentException;
 use Illuminate\Database\Eloquent\Model;
-use Unmit\ldk\BusinessObjectInterface;
+use Unmit\ldk\BusinessObjects\BusinessObjectInterface;
 
 /**
  * Class EnterpriseBaseModel
