@@ -30,6 +30,7 @@ abstract class AbstractApiController extends Controller
      * The Models object that will likely be instantiated during the extended controller construction.
      */
     protected $resourceModel;
+    protected $payload;
 
     /**
      * @return mixed
@@ -55,137 +56,12 @@ abstract class AbstractApiController extends Controller
      */
     public function __construct()
     {
-
-    }
-
-    /**
-     * getPayload()
-     *
-     * @param Request $request
-     * @param mixed $obj
-     * @param boolean $forceFieldNameTranslation Only if $obj is a record
-     *
-     * @return array
-     *
-     * @author Michael Han <mhan1@unm.edu>
-     * @author Ron V Estrada <rvestra@unm.edu>
-     *
-     * @version 0.1.1 2019-10-18 MH
-     * @since 0.1.0
-     */
-    protected function getPayload(Request $request, $data, $errors)
-    {
         // initialize payload array
-        $payload = new Payload();
-        // get id column name
-        $bo = $this->getResourceModel()->getBusinessObject();
-        if(isset($bo))
-        {
-            $payload->setId($bo->getIdColumnName());
-        }
-
-        // links.self the full url invoked to get this
-        $payload->setLink('self',$request->fullUrl());
-        if(!empty($errors)) {
-            // there's no data, so return an empty array
-            $payload->setErrors($errors);
-        }
-        else
-        {
-            // data can be Collection, array, string, Model
-            $dataType = gettype($data);
-            switch ($dataType) {
-                case 'string':
-                    // default to id
-                    $payload->setDataString($data);
-                    break;
-                case 'array':
-                    $payload->setDataArray($data);
-                    break;
-                case 'object':
-                    $payload->setDataArray($data->toArray());
-                    break;
-                default:
-                    $payload->setErrors(['message' => 'model response data type unmatched']);
-                    break;
-            }
-        }
-
-        return $payload;
-    }
-
-    /**
-     * Take a payload record(s) as key / value and toggle from Column Name -> Name
-     * When $payload can be:
-     *  Model
-     *  array(column, value)
-     *  Collection of Models
-     *
-     * @param $payload
-     * @return array
-     */
-    public function translateOutboundData($payload)
-    {
-        if ($payload instanceof Model) {
-            return $this->translateToName($payload->toArray());
-        }
-        elseif (is_array($payload))
-        {
-            return $this->translateToName($payload);
-        }
-        elseif ($payload instanceof Illuminate\Database\Eloquent\Collection)
-        {
-            $translation = array();
-            $payload->each(function ($value,$key) use (&$translation){
-                $item = $this->translateToName($value->toArray());
-                return $translation->push($item);
-            });
-
-        }
-    }
-
-    /**
-     * Take a column / value array of and toggle from Column Name -> Name
-     *
-     * @param array $columns
-     * @return array
-     */
-    public function translateToName(array $columns)
-    {
-        $businessObject = $this->getResourceModel()->getBusinessObject();
-        $translation = array();
-
-        collect($columns)->reject(function ($value, $key) {
-            return empty($value);
-        })->each(function ($value,$key) use (&$translation, $businessObject){
-            $item = $businessObject->getByColumnName(strtoupper($key));
-            if(isset($item))
-                return $translation[$item->getName()] = $value;
-        });
-        return $translation;
+        $this->payload = new Payload();
     }
 
 
-    /**
-     * Take a names / value array of and toggle from Name -> Column Name
-     *
-     * @param array $names
-     * @return array
-     */
-    public function translateToColumnName(array $names)
-    {
-        $businessObject = $this->getResourceModel()->getBusinessObject();
-        $translation = array();
 
-        collect($names)->reject(function ($value, $key) {
-            return empty($value);
-        })->each(function ($value,$key) use (&$translation, $businessObject){
-            $item = $businessObject->getByName($key);
-            if(isset($item))
-                return $translation[$item->getColumnName()] = $value;
-        });
-        return $translation;
-    }
     /**
      * index()
      * Display a list of all of the entities.
@@ -204,23 +80,6 @@ abstract class AbstractApiController extends Controller
      */
     public function index(Request $request)
     {
-        // select() parameter init
-//        $selectstr = [];
-//        $selectAltNames = [];
-
-        // get query string from the URI
-        $qstring = parse_url($request->getRequestUri(),PHP_URL_QUERY);
-        parse_str($qstring,$qstr);
-
-        // check for limit parameter
-        $limit = $qstr['limit'] ?? false;
-
-        // check for offset parameter
-        $offset = $qstr['start'] ?? false;
-
-        // check for query string parameter
-        $searchstr = $qstr['query'] ?? false;
-
         // make a string for field name translation from column name
         // to business name to be used in select()
 //        $fields = $this->getResourceModel()->getBusinessObject()->getFields();
@@ -236,47 +95,39 @@ abstract class AbstractApiController extends Controller
         $errors = null;
         try
         {
+            // get search parameters
+            // get query string from the URI
+            $qstring = parse_url($request->getRequestUri(),PHP_URL_QUERY);
+            parse_str($qstring,$qstr);
+
+            // check for limit parameter
+            $limit = $qstr['limit'] ?? null;
+
+            // check for offset parameter
+            $offset = $qstr['start'] ?? null;
+            $this->payload->setLimit($limit,$offset);
+
+            // check for query string parameter
+            $searchstr = $qstr['query'] ?? false;
+
             $columns = \DB::raw(implode(',',$this->getResourceModel()->getBusinessObject()->getNameToColumnNameArray()));
-            $obj = $this->getResourceModel()->search($searchstr)->select($columns)
-                ->when($limit,function($query,$limit) {
+            $searchQuery = $this->getResourceModel()->search($searchstr)->select($columns);
+            $this->payload->setTotal($searchQuery->count());
+            $data = $searchQuery->when($limit,function($query,$limit) {
                     return $query->limit($limit); // limit
                 })->when($offset,function($query,$offset) {
                     return $query->offset($offset);  // offset
                 })->get();
-
-            $total_records = $obj->count();
-            $data = $obj->toArray();
         }
         catch(\Exception $e)
         {
-            $errors[] = $e->getCode().':'.$e->getMessage();
+            $errors = [$e->getCode() => $e->getMessage()];
         }
-
-
         // get payload
-        $payload = $this->getPayload($request,$data,$errors);
+        $this->payload = $this->getPayload($data,$errors);
 
-        // BEGIN - add more to data envelope
-
-        // add total count
-        $payload['total'] = $total_records * 1;
-
-        // add limit
-        if ($limit)
-            $payload['limit'] = $limit;
-
-        // add start (aka offset)
-        if ($offset)
-            $payload['start'] = $offset;
-
-        // add total count
-        $payload['count'] = $obj->count();
-
-        // END - add more to data envelope
-
-        // return payload in JSON format
         // TODO: remove ACAO header tag after token auth is added
-        return response()->json($payload)->header('Access-Control-Allow-Origin','*');
+        return response()->json($this->payload->toArray())->header('Access-Control-Allow-Origin','*');
     }
 
     /**
@@ -435,5 +286,132 @@ abstract class AbstractApiController extends Controller
             return response()->json(['error'=>__('BAD REQUEST')],400)->header('Access-Control-Allow-Origin','*');
         }
     }
+    /**
+     * getPayload()
+     *
+     * @param Request $request
+     * @param mixed $obj
+     * @param boolean $forceFieldNameTranslation Only if $obj is a record
+     *
+     * @return array
+     *
+     * @author Michael Han <mhan1@unm.edu>
+     * @author Ron V Estrada <rvestra@unm.edu>
+     *
+     * @version 0.1.1 2019-10-18 MH
+     * @since 0.1.0
+     */
+    protected function getPayload(Request $request, $data = null, $errors = null)
+    {
+        // get id column name
+        $bo = $this->getResourceModel()->getBusinessObject();
+        if(isset($bo))
+        {
+            $this->payload->setId($bo->getIdColumnName());
+        }
 
+        // links.self the full url invoked to get this
+        // @todo: need to handle other type of links
+        $this->payload->setLink('self',$request->fullUrl());
+        if(!empty($errors)) {
+            // there's no data, so return an empty array
+            $this->payload->setErrors($errors);
+        }
+        else
+        {
+            // data can be Collection, array, string, Model
+            $dataType = gettype($data);
+            switch ($dataType) {
+                case 'string':
+                    // default to id
+                    $this->payload->setDataString($data);
+                    break;
+                case 'array':
+                    $this->payload->setDataArray($data);
+                    break;
+                case 'object':
+                    $this->payload->setDataArray($data->toArray());
+                    break;
+                default:
+                    $this->payload->setErrors(['message' => 'model response data type unmatched']);
+                    break;
+            }
+        }
+
+        return $this->payload;
+    }
+
+
+    /**
+     * Take a payload record(s) as key / value and toggle from Column Name -> Name
+     * When $payload can be:
+     *  Model
+     *  array(column, value)
+     *  Collection of Models
+     *
+     * @param $payload
+     * @return array
+     */
+    public function translateOutboundData($payload)
+    {
+        if ($payload instanceof Model) {
+            return $this->translateToName($payload->toArray());
+        }
+        elseif (is_array($payload))
+        {
+            return $this->translateToName($payload);
+        }
+        elseif ($payload instanceof Illuminate\Database\Eloquent\Collection)
+        {
+            $translation = array();
+            $payload->each(function ($value,$key) use (&$translation){
+                $item = $this->translateToName($value->toArray());
+                return $translation->push($item);
+            });
+
+        }
+    }
+
+    /**
+     * Take a column / value array of and toggle from Column Name -> Name
+     *
+     * @param array $columns
+     * @return array
+     */
+    public function translateToName(array $columns)
+    {
+        $businessObject = $this->getResourceModel()->getBusinessObject();
+        $translation = array();
+
+        collect($columns)->reject(function ($value, $key) {
+            return empty($value);
+        })->each(function ($value,$key) use (&$translation, $businessObject){
+            $item = $businessObject->getByColumnName(strtoupper($key));
+            if(isset($item))
+                return $translation[$item->getName()] = $value;
+        });
+        return $translation;
+    }
+
+
+    /**
+     * Take a names / value array of and toggle from Name -> Column Name
+     *
+     * @param array $names
+     * @return array
+     */
+    public function translateToColumnName(array $names)
+    {
+        $businessObject = $this->getResourceModel()->getBusinessObject();
+        $translation = array();
+
+        collect($names)->reject(function ($value, $key) {
+            return empty($value);
+        })->each(function ($value,$key) use (&$translation, $businessObject){
+            $item = $businessObject->getByName($key);
+            if(isset($item))
+                return $translation[$item->getColumnName()] = $value;
+        });
+        return $translation;
+    }
 }

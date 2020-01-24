@@ -13,10 +13,14 @@ class Payload
     const TOTAL = 'total';
     const REQUEST_ERRORS = 'errors';
     const ID = 'id';
+    const COUNT = 'count';
 
     private $id;
     private $data;
     private $total;
+    private $count;
+    private $limit;
+    private $offset;
     private $links = array();
     private $errors;
 
@@ -50,24 +54,37 @@ class Payload
     /**
      * @param mixed $data
      */
-    public function setData($data)
+    public function setDataArray($array)
     {
-        //
-        $this->data = $data;
+        $this->data = $array;
+    }
+
+    /**
+     * @param $str
+     */
+    public function setDataString($str)
+    {
+        $this->data = [Payload::ID => $str];
     }
 
     /**
      * @return mixed
      */
+    public function getCount()
+    {
+        // get total if it data exists
+        if (empty($this->getData()))
+        {
+            return 0;
+        }
+        return count($this->getData());
+    }
+    /**
+     * @return mixed
+     */
     public function getTotal()
     {
-        // get total if it exists
-        if (is_a($this->getData(),Collection::class)) {
-            $total_count = $this->getData()->first()->total_count ?? null;
-        } else {
-            $total_count = $this->getData()->total_count ?? null;
-        }
-        return $total_count;
+        return $this->total;
     }
 
     /**
@@ -77,7 +94,39 @@ class Payload
     {
         $this->total = $total;
     }
+    /**
+     * @return mixed
+     */
+    public function getLimit()
+    {
+        return $this->limit;
+    }
 
+    /**
+     * @param mixed $limit
+     */
+    public function setLimit($limit, $offset = null)
+    {
+        $this->limit = $limit;
+        if(isset($offset))
+            $this->offset = $offset;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getOffset()
+    {
+        return $this->offset;
+    }
+
+    /**
+     * @param mixed $offset
+     */
+    public function setOffset($offset)
+    {
+        $this->offset = $offset;
+    }
     /**
      * @return mixed
      */
@@ -153,8 +202,18 @@ class Payload
         {
             // there's no data, so return an empty array
             $output[Payload::REQUEST_ERRORS] = $this->getErrors();
-            $output[Payload::TOTAL] = $this->getTotal();
+            $output[Payload::COUNT] = $this->getCount();
         }
+        $output[Payload::TOTAL] = $this->getTotal();
+        
         return $output;
+    }
+
+    /**
+     * @return false|string
+     */
+    public function toJson()
+    {
+        return json_encode($this->toArray());
     }
 }
