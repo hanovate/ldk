@@ -301,7 +301,7 @@ abstract class AbstractApiController extends Controller
      * @version 0.1.1 2019-10-18 MH
      * @since 0.1.0
      */
-    protected function getPayload(Request $request, $data = null, $errors = null)
+    protected function getPayload($data = null, $errors = null)
     {
         // get id column name
         $bo = $this->getResourceModel()->getBusinessObject();
