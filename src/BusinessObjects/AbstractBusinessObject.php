@@ -296,7 +296,7 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
      *   0.1.2 MH - automatic business name uses underscore for spacing
      * @since 0.1.1
      */
-    public function pushElements($items,$table_name,$elems,$donotprefix = false)
+    public function pushElements($items,$elems, $table_name = null)
     {
         // return false if there's nothing in $elems
         if (empty($elems)) return false;
@@ -323,7 +323,7 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
 
                 // if colname isn't defined, then just replace spaces
                 //   with underscores in name
-                $colname = $donotprefix ? '':$table_name.'_';
+                $colname = isset($table_name) ? $table_name.'_':'';
                 if (array_key_exists(BusinessObjectItem::COLUMN_NAME,$o) && !empty($o[BusinessObjectItem::COLUMN_NAME])) {
                     $colname .= $o[BusinessObjectItem::COLUMN_NAME];
                 } else {
@@ -331,7 +331,7 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
                 }
                 $obj->setColumnName($colname);
 
-                // set direct access arrays
+//                // set direct access arrays
                 $this->nameToColumnName[$bizname] = $colname;
                 $this->nameToBusinessName[$bizname] = $o[BusinessObjectItem::BUSINESS_NAME];
                 $this->columnNameToName[$colname] = $name;
@@ -342,5 +342,20 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
         } catch (\Exception $e) {
             echo 'Exception occurred in '.__FUNCTION__.' on line '.$e->getLine().': '.$e->getMessage();
         }
+    }
+    public function setDirectAccessNameToColumn($name,$colname)
+    {
+        // set direct access arrays
+        $this->nameToColumnName[$name] = $colname;
+    }
+    public function setDirectAccessNameToBusinessName($name,$bizname)
+    {
+        // set direct access arrays
+        $this->nameToBusinessName[$name] = $bizname;
+    }
+    public function setDirectAccessColumnNameToName($colname, $name)
+    {
+        // set direct access arrays
+        $this->columnNameToName[$colname] = $name;
     }
 }
