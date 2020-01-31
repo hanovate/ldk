@@ -83,7 +83,7 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
     {
         $item = $this->getByName(BusinessObjectInterface::ID_NAME);
         if(empty($item)){
-            throw new Exception('Business Object does not have an id');
+            throw new \Exception('Business Object does not have an id');
         }
         return $item->getColumnName();
     }

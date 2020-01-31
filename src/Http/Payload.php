@@ -5,6 +5,7 @@ namespace Unmit\ldk\Http;
 
 
 use Illuminate\Database\Eloquent\Collection;
+use Symfony\Component\HttpFoundation\Response as ResponseConstants;
 
 class Payload
 {
@@ -14,6 +15,8 @@ class Payload
     const REQUEST_ERRORS = 'errors';
     const ID = 'id';
     const COUNT = 'count';
+    const RESPONSE_STATUS = 'code';
+
 
     private $id;
     private $data;
@@ -23,6 +26,8 @@ class Payload
     private $offset;
     private $links = array();
     private $errors;
+    private $status;
+
 
     /**
      * @return mixed
@@ -173,7 +178,28 @@ class Payload
     {
         $this->errors = $errors;
     }
+    /**
+     * @return mixed
+     */
+    public function getStatusDescription()
+    {
+        return ResponseConstants::statusText[intval($this->getStatus())];
+    }
+    /**
+     * @return mixed
+     */
+    public function getStatusCode()
+    {
+        return $this->getStatus();
+    }
 
+    /**
+     * @param mixed $status
+     */
+    public function setStatus($status)
+    {
+        $this->status = $status;
+    }
 
     /**
      * @return array
@@ -197,15 +223,16 @@ class Payload
 
             // get primary key name
             $output[Payload::ID] = $this->getId();
+            // @todo: return appropriate status code
 
         } else
         {
             // there's no data, so return an empty array
             $output[Payload::REQUEST_ERRORS] = $this->getErrors();
+            // @todo: translate($exception) return status code
             $output[Payload::COUNT] = $this->getCount();
         }
         $output[Payload::TOTAL] = $this->getTotal();
-        
         return $output;
     }
 

@@ -8,7 +8,6 @@ use http\Exception\InvalidArgumentException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Unmit\ldk\BusinessObjectInterface;
 
 /**
  * abstract class AbstractApiController
@@ -31,6 +30,40 @@ abstract class AbstractApiController extends Controller
      */
     protected $resourceModel;
     protected $payload;
+    private $data;
+    private $errors;
+
+    /**
+     * @return mixed
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * @param mixed $data
+     */
+    public function setData($data)
+    {
+        $this->data = $data;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getErrors()
+    {
+        return $this->errors;
+    }
+
+    /**
+     * @param mixed $errors
+     */
+    public function setErrors($errors)
+    {
+        $this->errors = $errors;
+    }
 
     /**
      * @return mixed
