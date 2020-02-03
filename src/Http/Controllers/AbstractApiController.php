@@ -8,7 +8,6 @@ use http\Exception\InvalidArgumentException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Unmit\ldk\BusinessObjectInterface;
 
 /**
  * abstract class AbstractApiController
@@ -31,6 +30,40 @@ abstract class AbstractApiController extends Controller
      */
     protected $resourceModel;
     protected $payload;
+    private $data;
+    private $errors;
+
+    /**
+     * @return mixed
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * @param mixed $data
+     */
+    public function setData($data)
+    {
+        $this->data = $data;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getErrors()
+    {
+        return $this->errors;
+    }
+
+    /**
+     * @param mixed $errors
+     */
+    public function setErrors($errors)
+    {
+        $this->errors = $errors;
+    }
 
     /**
      * @return mixed
@@ -91,8 +124,6 @@ abstract class AbstractApiController extends Controller
         // TODO: add more parameters here & below (e.g. sort, orderby, etc)
         // set whereColumn parameter
         // get objects and pass on the parameters
-        $data = null;
-        $errors = null;
         try
         {
             // get search parameters
@@ -113,18 +144,22 @@ abstract class AbstractApiController extends Controller
             $columns = \DB::raw(implode(',',$this->getResourceModel()->getBusinessObject()->getNameToColumnNameArray()));
             $searchQuery = $this->getResourceModel()->search($searchstr)->select($columns);
             $this->payload->setTotal($searchQuery->count());
-            $data = $searchQuery->when($limit,function($query,$limit) {
-                    return $query->limit($limit); // limit
-                })->when($offset,function($query,$offset) {
-                    return $query->offset($offset);  // offset
-                })->get();
+            $this->setData($searchQuery->when($limit,function($query,$limit) {
+                return $query->limit($limit); // limit
+            })->when($offset,function($query,$offset) {
+                return $query->offset($offset);  // offset
+            })->get());
+
+            // links.self the full url invoked to get this
+            // @todo: need to handle other type of links
+            $this->payload->setLink('self',$request->fullUrl());
         }
         catch(\Exception $e)
         {
-            $errors = [$e->getCode() => $e->getMessage()];
+            $this->setErrors([$e->getCode() => $e->getMessage()]);
         }
         // get payload
-        $this->payload = $this->getPayload($data,$errors);
+        $this->payload = $this->getPayload();
 
         // TODO: remove ACAO header tag after token auth is added
         return response()->json($this->payload->toArray())->header('Access-Control-Allow-Origin','*');
@@ -146,14 +181,21 @@ abstract class AbstractApiController extends Controller
      */
     public function find(Request $request,$id)
     {
-        // get an object
-        $obj = $this->getResourceModel()->find($id);
+        try
+        {
+            // get an object
+            $this->setData($this->getResourceModel()->find($id));
+        }
+        catch(\Exception $e)
+        {
+            $this->setErrors([$e->getCode() => $e->getMessage()]);
+        }
 
         // get payload
-        $payload = $this->getPayload($request,$obj,true);
+        $payload = $this->getPayload();
 
         // return payload in JSON format
-        return response()->json($payload)->header('Access-Control-Allow-Origin','*');
+        return response()->json($payload->toArray())->header('Access-Control-Allow-Origin','*');
     }
 
     /**
@@ -301,7 +343,7 @@ abstract class AbstractApiController extends Controller
      * @version 0.1.1 2019-10-18 MH
      * @since 0.1.0
      */
-    protected function getPayload($data = null, $errors = null)
+    protected function getPayload()
     {
         // get id column name
         $bo = $this->getResourceModel()->getBusinessObject();
@@ -310,27 +352,25 @@ abstract class AbstractApiController extends Controller
             $this->payload->setId($bo->getIdColumnName());
         }
 
-        // links.self the full url invoked to get this
-        // @todo: need to handle other type of links
-        $this->payload->setLink('self',$request->fullUrl());
-        if(!empty($errors)) {
+        $payloadErrors = $this->getErrors();
+        if(!empty($payloadErrors)) {
             // there's no data, so return an empty array
-            $this->payload->setErrors($errors);
+            $this->payload->setErrors($payloadErrors);
         }
         else
         {
             // data can be Collection, array, string, Model
-            $dataType = gettype($data);
+            $dataType = gettype($this->getData());
             switch ($dataType) {
                 case 'string':
                     // default to id
-                    $this->payload->setDataString($data);
+                    $this->payload->setDataString($this->getData());
                     break;
                 case 'array':
-                    $this->payload->setDataArray($data);
+                    $this->payload->setDataArray($this->getData());
                     break;
                 case 'object':
-                    $this->payload->setDataArray($data->toArray());
+                    $this->payload->setDataArray($this->getData()->toArray());
                     break;
                 default:
                     $this->payload->setErrors(['message' => 'model response data type unmatched']);
