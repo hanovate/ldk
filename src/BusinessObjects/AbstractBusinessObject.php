@@ -332,8 +332,8 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
                 $obj->setColumnName($colname);
 
 //                // set direct access arrays
-                $this->nameToColumnName[$bizname] = $colname;
-                $this->nameToBusinessName[$bizname] = $o[BusinessObjectItem::BUSINESS_NAME];
+                $this->nameToColumnName[$name] = $colname;
+                $this->nameToBusinessName[$name] = $o[BusinessObjectItem::BUSINESS_NAME];
                 $this->columnNameToName[$colname] = $name;
 
                 // push it!
