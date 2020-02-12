@@ -141,8 +141,8 @@ abstract class AbstractApiController extends Controller
             // check for query string parameter
             $searchstr = $qstr['query'] ?? false;
 
-            $columns = \DB::raw(implode(',',$this->getResourceModel()->getBusinessObject()->getNameToColumnNameArray()));
-            $searchQuery = $this->getResourceModel()->search($searchstr)->select($columns);
+//            $columns = \DB::raw(implode(',',->getNameToColumnNameArray()));
+            $searchQuery = $this->getResourceModel()->search($searchstr)->select($this->getResourceModel()->getBusinessObject()->getSqlSelectItems());
             $this->payload->setTotal($searchQuery->count());
             $this->setData($searchQuery->when($limit,function($query,$limit) {
                 return $query->limit($limit); // limit
