@@ -13,6 +13,7 @@ class BusinessObjectItem
     const NAME = 'name';
     const BUSINESS_NAME = 'business-name';
     const COLUMN_NAME = 'column-name';
+    const _AS_ = ' as ';
 
     /**
      * The attribute is used to define the item to the API program
@@ -119,5 +120,15 @@ class BusinessObjectItem
     {
         return $this->businessName;
     }
+
+    /**
+     * @return string
+     */
+    public function getAsSqlAlias()
+    {
+        return $this->getColumnName().self::_AS_.$this->name;
+    }
+
+
 
 }

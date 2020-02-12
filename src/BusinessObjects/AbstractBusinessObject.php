@@ -210,6 +210,30 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
     /**
      * @return array
      */
+    public function getSqlSelectString($useAliases=true)
+    {
+        $selectString = null;
+        $lastKey = array_key_last(getColumnNameToNameArray());
+        $more = true;
+        foreach (getColumnNameToNameArray() as $column=>$name)
+        {
+            if($useAliases)
+            {
+                $selectString .= $column.BusinessObjectItem::_AS_.$name;
+            }
+            else
+            {
+                $selectString .= $column;
+            }
+            if($column != $lastKey)
+                $selectString .= ', ';
+        }
+        return $selectString;
+    }
+
+    /**
+     * @return array
+     */
     public function toArray()
     {
         return $this->getArray();
@@ -286,12 +310,12 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
      * This will throw an exception if name is undefined and return false
      * if $elems is empty.
      *
-     * @param Collection $items instantiated Collection
-     * @param string $table_name the name of the table to use for prefixing
+     * @param $items instantiated Collection
      * @param array $elems the array containing elements to be pushed
-     * @param bool $donotprefix if true, $table_name isn't prefixed for colname
+     * @param string $table_name the name of the table to use for prefixing
      *
      * @author Michael Han <mhan1@unm.edu>
+     * @author Ron Estrada <rvestra@unm.edu>
      * @version 0.1.3 MH - swap business_name & name
      *   0.1.2 MH - automatic business name uses underscore for spacing
      * @since 0.1.1

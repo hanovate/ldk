@@ -61,6 +61,11 @@ interface BusinessObjectInterface
     public function getByBusinessName($businessName);
 
     /**
+     * @return mixed
+     */
+    public function getSqlSelectString();
+
+    /**
      * @return array
      */
     public function toArray();
