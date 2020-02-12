@@ -210,25 +210,21 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
     /**
      * @return array
      */
-    public function getSqlSelectString($useAliases=true)
+    public function getSqlSelectItems($useAliases=true)
     {
-        $selectString = null;
-        $lastKey = array_key_last(getColumnNameToNameArray());
-        $more = true;
-        foreach (getColumnNameToNameArray() as $column=>$name)
+        $selectItems = array();
+        foreach ($this->getNameToColumnNameArray() as $name=>$column)
         {
             if($useAliases)
             {
-                $selectString .= $column.BusinessObjectItem::_AS_.$name;
+                $selectItems[] .= $column.BusinessObjectItem::_AS_.$name;
             }
             else
             {
-                $selectString .= $column;
+                $selectItems[] .= $column;
             }
-            if($column != $lastKey)
-                $selectString .= ', ';
         }
-        return $selectString;
+        return $selectItems;
     }
 
     /**

@@ -49,6 +49,16 @@ interface BusinessObjectInterface
     public function getNames();
 
     /**
+     * @return mixed
+     */
+    public function getNameToColumnNameArray();
+
+    /**
+     * @return mixed
+     */
+    public function getNameToBusinessNameArray();
+
+    /**
      * @param string $column
      * @return BusinessObjectItem
      */
@@ -63,7 +73,7 @@ interface BusinessObjectInterface
     /**
      * @return mixed
      */
-    public function getSqlSelectString();
+    public function getSqlSelectItems();
 
     /**
      * @return array
