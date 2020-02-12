@@ -113,13 +113,6 @@ abstract class AbstractApiController extends Controller
      */
     public function index(Request $request)
     {
-        // make a string for field name translation from column name
-        // to business name to be used in select()
-//        $fields = $this->getResourceModel()->getBusinessObject()->getFields();
-//        foreach ($fields as $v) {
-//            $selectstr[] = $v->getColumnName().' as '.$v->getBusinessName();
-//            $selectAltNames[] = $v->getColumnName();
-//        }
 
         // TODO: add more parameters here & below (e.g. sort, orderby, etc)
         // set whereColumn parameter
@@ -141,7 +134,6 @@ abstract class AbstractApiController extends Controller
             // check for query string parameter
             $searchstr = $qstr['query'] ?? false;
 
-//            $columns = \DB::raw(implode(',',->getNameToColumnNameArray()));
             $searchQuery = $this->getResourceModel()->search($searchstr)->
                 select($this->getResourceModel()->getBusinessObject()->getSqlSelectItems());
             $this->payload->setTotal($searchQuery->count());
