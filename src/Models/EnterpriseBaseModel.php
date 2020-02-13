@@ -114,6 +114,36 @@ class EnterpriseBaseModel extends Model
         }
         );
     }
+    /**
+     * Toggle from Column Name -> Name
+     *
+     * @param array $columns
+     * @return array
+     */
+    public function translateToName()
+    {
+        $nameMap = $this->getBusinessObject()->getNameToColumnNameArray();
+        $translation = array();
+        foreach($nameMap as $name => $column) {
+                $translation[$name] = $this->getAttribute($column);
+        }
+        return $translation;
+    }
+    /**
+     * Set from Name -> Column Name
+     *
+     * @param array $values usually from request->all()
+     * @return Model
+     */
+    public function translateToColumn($values)
+    {
+        $nameMap = $this->getBusinessObject()->getNameToColumnNameArray();
+        foreach ($values as $name => $value) {
+            $this->setAttribute($nameMap[$name], $value);
+            unset($values[$name]);
+        }
+        return $this;
+    }
 }
 
 
