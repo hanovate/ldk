@@ -176,8 +176,15 @@ abstract class AbstractApiController extends Controller
     {
         try
         {
-            // get an object
-            $this->setData($this->getResourceModel()->find($id)->translateToName());
+            // get an object or array (EnterprisePackageBaseModel returns an array
+            $result = $this->getResourceModel()->find($id);
+            if(!is_array($result))
+            {
+                //its a model
+                $result = $result->translateToName();
+            }
+            $this->setData($result);
+
         }
         catch(\Exception $e)
         {
