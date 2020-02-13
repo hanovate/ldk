@@ -13,6 +13,7 @@ class BusinessObjectItem
     const NAME = 'name';
     const BUSINESS_NAME = 'business-name';
     const COLUMN_NAME = 'column-name';
+    // used with sql aliasse
     const _AS_ = ' as ';
 
     /**
@@ -128,7 +129,4 @@ class BusinessObjectItem
     {
         return $this->getColumnName().self::_AS_.$this->name;
     }
-
-
-
 }

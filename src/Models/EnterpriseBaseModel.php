@@ -145,15 +145,3 @@ class EnterpriseBaseModel extends Model
         return $this;
     }
 }
-
-
-/*
-foreach ($selectAltNames as $v) {
-    if ($firstfound) {
-        $whereStr .= ' or ';
-    }
-    $whereStr .= "UPPER({$v}) like ?"; // '%{$querystr}%'";
-    $whereColumn[] = '%'.strtoupper($querystr).'%';
-
-}
-*/

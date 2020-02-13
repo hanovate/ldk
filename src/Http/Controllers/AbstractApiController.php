@@ -211,7 +211,9 @@ abstract class AbstractApiController extends Controller
      */
     public function store(Request $request)
     {
+        // @todo: need a try catch
         // status code; default: 201 Created
+        // @todo: set status code on payload
         $status_code = 201;
 
         $response_content = [];
@@ -248,18 +250,20 @@ abstract class AbstractApiController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // @todo: need a try catch
         // status code; default to 200 OK
+        // @todo: set status code on payload
         $status_code = 200;
         $response_content = null;
 
         switch ($request->getMethod()) {
             case EnterpriseBaseModel::PUT:
-                // find the resource
+                // find the entire resource
                 $model = $this->getResourceModel()->findOrFail($id);
                 // save the resource that came through the request
                 $response_content = $model->translateToColumn($request->all())->save();
             case EnterpriseBaseModel::PATCH:
-                // save the resource that came through the request
+                // save the request all that came through the request
                 $values = $request->all();
                 $values[BusinessObjectInterface::ID_NAME] = $id;
                 $response_content = $this->getResourceModel()->translateToColumn($values)->save();
@@ -283,6 +287,9 @@ abstract class AbstractApiController extends Controller
      */
     public function destroy($id)
     {
+        // @todo: need a try catch
+        // status code; default to 200 OK
+        // @todo: set status code on payload
         // reset response variable
         $response_content = [];
 

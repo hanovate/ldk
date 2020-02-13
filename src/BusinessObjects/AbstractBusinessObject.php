@@ -349,6 +349,7 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
 
                 // if colname isn't defined, then just replace spaces
                 //   with underscores in name
+                // @ todo: move prefixing to class method; also use table class variable in construction from Model
                 $colname = isset($table_name) ? $table_name.'_':'';
                 if (array_key_exists(BusinessObjectItem::COLUMN_NAME,$o) && !empty($o[BusinessObjectItem::COLUMN_NAME])) {
                     $colname .= $o[BusinessObjectItem::COLUMN_NAME];
@@ -357,7 +358,7 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
                 }
                 $obj->setColumnName($colname);
 
-//                // set direct access arrays
+                // set direct access arrays
                 $this->nameToColumnName[$name] = $colname;
                 $this->nameToBusinessName[$name] = $o[BusinessObjectItem::BUSINESS_NAME];
                 $this->columnNameToName[$colname] = $name;
