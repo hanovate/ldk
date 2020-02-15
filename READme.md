@@ -60,7 +60,9 @@ Now, the“composer.json” file for every Laravel application is present in the
 ```
 
 ##  User Documentation
+
 [Laravel Development Kit (LDK) Dashboard](http://https://confluence.unm.edu/display/APPGS/APP+-+Laravel+Development+Kit+%28LDK%29+Dashboard "APPS - Laravel Development Kit (LDK) Dashboard")
+
 [Laravel Work Instructions](http://https://confluence.unm.edu/display/TECH/APPS+-+Laravel+Work+Instructions "UNM IT - Laravel Work Instructions")
 ## License
 
