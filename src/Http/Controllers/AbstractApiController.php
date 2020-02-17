@@ -3,10 +3,8 @@
 namespace Unmit\ldk\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Unmit\ldk\BusinessObjectInterface;
 use Unmit\ldk\Http\Payload;
-use http\Exception\InvalidArgumentException;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
 /**
@@ -104,6 +102,7 @@ abstract class AbstractApiController extends Controller
      * @return Response
      *
      * @author Michael Han <mhan1@unm.edu>
+     * @author Ron V Estrada <rvestra@unm.edu>
      *
      * @version 0.1.1 2019-10-11 add field name translation via select()
      *   0.1.0 2019-09-01 phase 1 - a step towards better REST API & OAS
@@ -113,13 +112,6 @@ abstract class AbstractApiController extends Controller
      */
     public function index(Request $request)
     {
-        // make a string for field name translation from column name
-        // to business name to be used in select()
-//        $fields = $this->getResourceModel()->getBusinessObject()->getFields();
-//        foreach ($fields as $v) {
-//            $selectstr[] = $v->getColumnName().' as '.$v->getBusinessName();
-//            $selectAltNames[] = $v->getColumnName();
-//        }
 
         // TODO: add more parameters here & below (e.g. sort, orderby, etc)
         // set whereColumn parameter
@@ -141,8 +133,8 @@ abstract class AbstractApiController extends Controller
             // check for query string parameter
             $searchstr = $qstr['query'] ?? false;
 
-            $columns = \DB::raw(implode(',',$this->getResourceModel()->getBusinessObject()->getNameToColumnNameArray()));
-            $searchQuery = $this->getResourceModel()->search($searchstr)->select($columns);
+            $searchQuery = $this->getResourceModel()->search($searchstr)->
+                select($this->getResourceModel()->getBusinessObject()->getSqlSelectItems());
             $this->payload->setTotal($searchQuery->count());
             $this->setData($searchQuery->when($limit,function($query,$limit) {
                 return $query->limit($limit); // limit
@@ -175,6 +167,7 @@ abstract class AbstractApiController extends Controller
      * @return Response
      *
      * @author Michael Han <mhan1@unm.edu>
+     * @author Ron V Estrada <rvestra@unm.edu>
      *
      * @version 0.1.0 2019-08-29 phase 1 - a step towards better REST API & OAS
      * @since 0.1.0
@@ -183,8 +176,15 @@ abstract class AbstractApiController extends Controller
     {
         try
         {
-            // get an object
-            $this->setData($this->getResourceModel()->find($id));
+            // get an object or array (EnterprisePackageBaseModel returns an array
+            $result = $this->getResourceModel()->find($id);
+            if(!is_array($result))
+            {
+                //its a model
+                $result = $result->translateToName();
+            }
+            $this->setData($result);
+
         }
         catch(\Exception $e)
         {
@@ -211,36 +211,31 @@ abstract class AbstractApiController extends Controller
      *   3. for other cases
      *
      * @author Michael Han <mhan1@unm.edu>
+     * @author Ron V Estrada <rvestra@unm.edu>
      *
      * @version 0.1.1 2019-10-21 MH
      * @since 0.1.1
      */
     public function store(Request $request)
     {
+        // @todo: need a try catch
         // status code; default: 201 Created
+        // @todo: set status code on payload
         $status_code = 201;
 
         $response_content = [];
 
-        // translate business names to column names
-        $nameMap = $this->getResourceModel()->getBusinessObject()->getBusinessNameToColumnNameArray();
-        $incomingContent = $request->all();
-        foreach ($incomingContent as $k => $v) {
-            $incomingContent[$nameMap[$k]] = $v;
-            unset($incomingContent[$k]);
-        }
-
         // save to database
-        $success = $this->getResourceModel()->fill($incomingContent)->save();
+        $success = $this->getResourceModel()->translateToColumn($request->all())->save();
 
         // get request content as a response if successful
         if ($success) {
-            $response_content = $incomingContent;
+            return response()->json($this->translateToName(),$status_code)->header('Access-Control-Allow-Origin','*');
         } else {
-            $status_code = 500; // DB save didn't occur properly
+            return response()->json(['error'=>__('BAD REQUEST')],500)->header('Access-Control-Allow-Origin','*');
         }
 
-        return response()->json($response_content,$status_code)->header('Access-Control-Allow-Origin','*');
+
     }
 
     /**
@@ -253,6 +248,7 @@ abstract class AbstractApiController extends Controller
      * @return Response
      *
      * @author Michael Han <mhan1@unm.edu>
+     * @author Ron V Estrada <rvestra@unm.edu>
      *
      * @version 0.1.1 2019-10-21 MH add biz name to col name conversion
      * @since 0.1.2
@@ -261,42 +257,25 @@ abstract class AbstractApiController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // @todo: need a try catch
         // status code; default to 200 OK
+        // @todo: set status code on payload
         $status_code = 200;
-
-        $response_content = [];
-
-        // translate names to column names
-        $nameMap = $this->getResourceModel()->getBusinessObject()->getBusinessNameToColumnNameArray();
-        $incomingContent = $request->all();
-        // todo: move this to method toggleToColunmName(namesArray) : array() on AbstractBusinessObject
-        foreach ($incomingContent as $k => $v) {
-            if (isset($nameMap[$k])) {
-                $incomingContent[$nameMap[$k]] = $v;
-            }
-            unset($incomingContent[$k]);
-        }
-
-        // find the resource
-        $this->resourceModel = $this->resourceModel->findOrFail($id);
-
-        // save the resource that came through the request
-        $success = $this->getResourceModel()->fill($incomingContent)->save();
-
-        if ($success) {
-            $response_content = $incomingContent;
-        } else {
-            // TODO: differentiate between different type of errors
-            $status_code = 500;
-        }
+        $response_content = null;
 
         switch ($request->getMethod()) {
             case EnterpriseBaseModel::PUT:
-                // todo: Add find() then fill(request->all()) and finally save()
+                // find the entire resource
+                $model = $this->getResourceModel()->findOrFail($id);
+                // save the resource that came through the request
+                $response_content = $model->translateToColumn($request->all())->save();
             case EnterpriseBaseModel::PATCH:
-                // todo: this only needs fill(request->all()) and save()
-                return response()->json($response_content,$status_code)->header('Access-Control-Allow-Origin','*');
+                // save the request all that came through the request
+                $values = $request->all();
+                $values[BusinessObjectInterface::ID_NAME] = $id;
+                $response_content = $this->getResourceModel()->translateToColumn($values)->save();
         }
+        return response()->json($response_content->translateToName(),$status_code)->header('Access-Control-Allow-Origin','*');
     }
 
 
@@ -308,21 +287,26 @@ abstract class AbstractApiController extends Controller
      * @return Response
      *
      * @author Michael Han <mhan1@unm.edu>
+     * @author Ron V Estrada <rvestra@unm.edu>
      *
      * @version 0.1.0
      * @since 0.1.3
      */
     public function destroy($id)
     {
+        // @todo: need a try catch
+        // status code; default to 200 OK
+        // @todo: set status code on payload
         // reset response variable
         $response_content = [];
 
         // execute delete operation
-        $success = $this->getResourceModel()->find($id)->delete();
+        $values[BusinessObjectInterface::ID_NAME] = $id;
+        $response_content = $this->getResourceModel()->translateToColumn($values)->delete();
 
-        if ($success) {
+        if ($response_content) {
             // delete operation was a success
-            return response()->json($response_content,204)->header('Access-Control-Allow-Origin','*');
+            return response()->json($response_content->translateToName(),204)->header('Access-Control-Allow-Origin','*');
         } else {
             // an error was detected on the backend system
             return response()->json(['error'=>__('BAD REQUEST')],400)->header('Access-Control-Allow-Origin','*');
@@ -381,77 +365,4 @@ abstract class AbstractApiController extends Controller
         return $this->payload;
     }
 
-
-    /**
-     * Take a payload record(s) as key / value and toggle from Column Name -> Name
-     * When $payload can be:
-     *  Model
-     *  array(column, value)
-     *  Collection of Models
-     *
-     * @param $payload
-     * @return array
-     */
-    public function translateOutboundData($payload)
-    {
-        if ($payload instanceof Model) {
-            return $this->translateToName($payload->toArray());
-        }
-        elseif (is_array($payload))
-        {
-            return $this->translateToName($payload);
-        }
-        elseif ($payload instanceof Illuminate\Database\Eloquent\Collection)
-        {
-            $translation = array();
-            $payload->each(function ($value,$key) use (&$translation){
-                $item = $this->translateToName($value->toArray());
-                return $translation->push($item);
-            });
-
-        }
-    }
-
-    /**
-     * Take a column / value array of and toggle from Column Name -> Name
-     *
-     * @param array $columns
-     * @return array
-     */
-    public function translateToName(array $columns)
-    {
-        $businessObject = $this->getResourceModel()->getBusinessObject();
-        $translation = array();
-
-        collect($columns)->reject(function ($value, $key) {
-            return empty($value);
-        })->each(function ($value,$key) use (&$translation, $businessObject){
-            $item = $businessObject->getByColumnName(strtoupper($key));
-            if(isset($item))
-                return $translation[$item->getName()] = $value;
-        });
-        return $translation;
-    }
-
-
-    /**
-     * Take a names / value array of and toggle from Name -> Column Name
-     *
-     * @param array $names
-     * @return array
-     */
-    public function translateToColumnName(array $names)
-    {
-        $businessObject = $this->getResourceModel()->getBusinessObject();
-        $translation = array();
-
-        collect($names)->reject(function ($value, $key) {
-            return empty($value);
-        })->each(function ($value,$key) use (&$translation, $businessObject){
-            $item = $businessObject->getByName($key);
-            if(isset($item))
-                return $translation[$item->getColumnName()] = $value;
-        });
-        return $translation;
-    }
 }

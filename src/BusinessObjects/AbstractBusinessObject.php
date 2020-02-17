@@ -33,16 +33,25 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
     /** @var array Direct access array: colName => Name */
     private $columnNameToName = [];
 
+    /**
+     * @return array|mixed
+     */
     public function getNameToColumnNameArray()
     {
         return $this->nameToColumnName;
     }
 
+    /**
+     * @return mixed
+     */
     public function getNameToBusinessNameArray()
     {
         return $this->businessNameToBusinessName;
     }
 
+    /**
+     * @return array
+     */
     public function getColumnNameToNameArray()
     {
         return $this->columnNameToName;
@@ -77,7 +86,6 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
     /**
      * Get id column name of an object
      *
-     * @param Collection|BusinessObject
      */
     public function getIdColumnName()
     {
@@ -89,7 +97,6 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
     }
 
     /**
-     * @param $delimiter
      * @return mixed
      *
      * @todo type checking: array
@@ -100,7 +107,6 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
         return $this->getArray(BusinessObjectItem::NAME);
     }
     /**
-     * @param $delimiter
      * @return mixed
      */
     public function getBusinessNames()
@@ -109,7 +115,6 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
     }
 
     /**
-     * @param $delimiter
      * @return mixed
      *
      * @todo type checking: array
@@ -181,7 +186,7 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
 
     /**
      * @param $name
-     * @param $newColumn
+     * @param $columnName
      * @return bool|null
      *
      * @version 0.1.0 RVE
@@ -205,6 +210,28 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
         $this->getFields()->put($key, $item);
 
         return true;
+    }
+
+
+    /**
+     * @param bool $useAliases
+     * @return array|mixed
+     */
+    public function getSqlSelectItems($useAliases=true)
+    {
+        $selectItems = array();
+        foreach ($this->getNameToColumnNameArray() as $name=>$column)
+        {
+            if($useAliases)
+            {
+                $selectItems[] .= $column.BusinessObjectItem::_AS_.$name;
+            }
+            else
+            {
+                $selectItems[] .= $column;
+            }
+        }
+        return $selectItems;
     }
 
     /**
@@ -273,30 +300,29 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
         return $list;
     }
 
+
     /**
-     * $elems should be a two dimensional array containing key/val
+     * @author Michael Han <mhan1@unm.edu>, Ron Estrada <rvestra@unm.edu>
+     * @version 0.1.3 MH - swap business_name & name
+     *   0.1.2 MH - automatic business name uses underscore for spacing
+     * @since 0.1.1
+     * @param $items instantiated Collection; Likely the originating items class variable
+     * @param $elems should be a two dimensional array containing key/val
      * with at least BUSINESS_NAME => 'element name'; if key is not defined,
      * it will just use modified name and same rule applies for COLUMN_NAME.
      *
      * keys as defined by BusinessObjectItem constants
      * BusinessObjectItem::BUSINESS_NAME - label, or name used for users
-     * BusinessObjectItem::NAME - identifier, or name as keys in code
+     * BusinessObjectItem::NAME - canonical identifier, or name as keys in code
      * BusinessObjectItem::COLUMN_NAME - column name in the database
      *
      * This will throw an exception if name is undefined and return false
      * if $elems is empty.
-     *
-     * @param Collection $items instantiated Collection
-     * @param string $table_name the name of the table to use for prefixing
-     * @param array $elems the array containing elements to be pushed
-     * @param bool $donotprefix if true, $table_name isn't prefixed for colname
-     *
-     * @author Michael Han <mhan1@unm.edu>
-     * @version 0.1.3 MH - swap business_name & name
-     *   0.1.2 MH - automatic business name uses underscore for spacing
-     * @since 0.1.1
+     * @param null $table_name the name of the table to use for prefixing; if empty
+     * no prefixing will occur
+     * @return bool
      */
-    public function pushElements($items,$elems, $table_name = null)
+    public function pushElements($items, $elems, $table_name = null)
     {
         // return false if there's nothing in $elems
         if (empty($elems)) return false;
@@ -323,6 +349,7 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
 
                 // if colname isn't defined, then just replace spaces
                 //   with underscores in name
+                // @ todo: move prefixing to class method; also use table class variable in construction from Model
                 $colname = isset($table_name) ? $table_name.'_':'';
                 if (array_key_exists(BusinessObjectItem::COLUMN_NAME,$o) && !empty($o[BusinessObjectItem::COLUMN_NAME])) {
                     $colname .= $o[BusinessObjectItem::COLUMN_NAME];
@@ -331,7 +358,7 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
                 }
                 $obj->setColumnName($colname);
 
-//                // set direct access arrays
+                // set direct access arrays
                 $this->nameToColumnName[$name] = $colname;
                 $this->nameToBusinessName[$name] = $o[BusinessObjectItem::BUSINESS_NAME];
                 $this->columnNameToName[$colname] = $name;
@@ -343,16 +370,31 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
             echo 'Exception occurred in '.__FUNCTION__.' on line '.$e->getLine().': '.$e->getMessage();
         }
     }
-    public function setDirectAccessNameToColumn($name,$colname)
+
+    /**
+     * @param $name
+     * @param $colname
+     */
+    public function setDirectAccessNameToColumn($name, $colname)
     {
         // set direct access arrays
         $this->nameToColumnName[$name] = $colname;
     }
-    public function setDirectAccessNameToBusinessName($name,$bizname)
+
+    /**
+     * @param $name
+     * @param $bizname
+     */
+    public function setDirectAccessNameToBusinessName($name, $bizname)
     {
         // set direct access arrays
         $this->nameToBusinessName[$name] = $bizname;
     }
+
+    /**
+     * @param $colname
+     * @param $name
+     */
     public function setDirectAccessColumnNameToName($colname, $name)
     {
         // set direct access arrays

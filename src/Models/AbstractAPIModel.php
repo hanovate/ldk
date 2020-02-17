@@ -482,20 +482,6 @@ abstract class AbstractAPIModel implements RESTable
     }
 
     /**
-     * convert from an array with column-name keys:
-     *
-     * [
-     * "szvdist_sbgi_code" => "700004"
-     * "szvdist_dist_code" => "95"
-     * "szvdist_dist_desc" => "Alabama"
-     * "szvdist_type_ind" => "P"
-     * "szvdist_activity_date" => null
-     * "szvdist_user_id" => null
-     * "szvdist_surrogate_id" => "500342"
-     * "szvdist_version" => "0"
-     * "szvdist_data_origin" => null
-     * "szvdist_vpdi_code" => null
-     * ]
      *
      * to an array with business-name as keys for only fillable attributes
      *
@@ -533,20 +519,6 @@ abstract class AbstractAPIModel implements RESTable
     }
 
     /**
-     * convert from an array with column-name keys:
-     *
-     * [
-     * "szvdist_sbgi_code" => "700004"
-     * "szvdist_dist_code" => "95"
-     * "szvdist_dist_desc" => "Alabama"
-     * "szvdist_type_ind" => "P"
-     * "szvdist_activity_date" => null
-     * "szvdist_user_id" => null
-     * "szvdist_surrogate_id" => "500342"
-     * "szvdist_version" => "0"
-     * "szvdist_data_origin" => null
-     * "szvdist_vpdi_code" => null
-     * ]
      *
      * to an array with name as keys for only fillable attributes
      *

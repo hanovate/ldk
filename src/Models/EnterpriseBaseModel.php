@@ -114,16 +114,34 @@ class EnterpriseBaseModel extends Model
         }
         );
     }
-}
-
-
-/*
-foreach ($selectAltNames as $v) {
-    if ($firstfound) {
-        $whereStr .= ' or ';
+    /**
+     * Toggle from Column Name -> Name
+     *
+     * @param array $columns
+     * @return array
+     */
+    public function translateToName()
+    {
+        $nameMap = $this->getBusinessObject()->getNameToColumnNameArray();
+        $translation = array();
+        foreach($nameMap as $name => $column) {
+                $translation[$name] = $this->getAttribute($column);
+        }
+        return $translation;
     }
-    $whereStr .= "UPPER({$v}) like ?"; // '%{$querystr}%'";
-    $whereColumn[] = '%'.strtoupper($querystr).'%';
-
+    /**
+     * Set from Name -> Column Name
+     *
+     * @param array $values usually from request->all()
+     * @return Model
+     */
+    public function translateToColumn($values)
+    {
+        $nameMap = $this->getBusinessObject()->getNameToColumnNameArray();
+        foreach ($values as $name => $value) {
+            $this->setAttribute($nameMap[$name], $value);
+            unset($values[$name]);
+        }
+        return $this;
+    }
 }
-*/

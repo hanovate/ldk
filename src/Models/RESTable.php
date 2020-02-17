@@ -6,7 +6,6 @@ use Exception;
 use Illuminate\Support\Collection;
 use Unmit\ldk\BusinessObjectInterface;
 
-
 interface RESTable
 {
     /**

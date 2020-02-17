@@ -20,7 +20,7 @@ use Illuminate\Support\Collection;
  * multiple Model objects this class likely not be efficient.  Actions that will need to be implemented in the
  * extending class will be create() and custom queries.
  *
- * @package Unm
+ * @package unmit\ldk
  * @author  rvestra
  *
  * @version 1.0
@@ -51,7 +51,7 @@ class AppBaseController extends Controller
      */
     public function __construct()
     {
-        //$this->middleware('icas.auth');
+
     }
 
     /**
@@ -327,8 +327,12 @@ class AppBaseController extends Controller
     public function getControllerAction()
     {
         $route = Route::getCurrentRoute();
-        $atSymbolPosition = strpos($route->getActionName(), "@");
-        return substr($route->getActionName(), $atSymbolPosition+strlen("@"), strlen($route->getActionName()));
+        if(!is_null($route))
+        {
+            $atSymbolPosition = strpos($route->getActionName(), "@");
+            return substr($route->getActionName(), $atSymbolPosition+strlen("@"), strlen($route->getActionName()));
+        }
+        return '';
     }
 
 }
