@@ -10,7 +10,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Unmit\\ldk\\Tests\\": "tests/"
+      "Unmit\\ldk\\tests\\": "tests/"
     }
   },
   "require-dev": {
