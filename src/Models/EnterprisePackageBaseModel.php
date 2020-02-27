@@ -94,7 +94,7 @@ class EnterprisePackageBaseModel
     public function getPackage()
     {
         if(empty($this->package))
-            throw new InvalidArgumentException(__CLASS__.": Package cannot be null");
+            throw new InvalidArgumentException(__CLASS__.": Package is null");
         return $this->package;
     }
 
@@ -103,6 +103,8 @@ class EnterprisePackageBaseModel
      */
     public function setPackage($package)
     {
+        if(empty($package))
+            throw new InvalidArgumentException(__CLASS__.": Package cannot be null");
         $this->package = $package;
     }
 
@@ -167,44 +169,12 @@ class EnterprisePackageBaseModel
     }
 
     /**
-     * Should resolve your param => type array as collection of strings in the following format:
-     * [PARAM TYPE;]
-     *
-     * @return mixed
-     */
-    public function getDefaults()
-    {
-        return $this->defaults;
-    }
-
-    /**
-     * Must pass an array of key value pairs
-     * ['key' => 'value']
-     * key = ':<parameter>'
-     * value = <default>
-     *
-     * @param mixed $defaults
-     */
-    public function setDefaults(array $defaults)
-    {
-        if(!is_array($defaults))
-            throw new InvalidArgumentException(__CLASS__."Defaults must be an array!");
-        $this->defaults = collect($defaults);
-    }
-    /**
      * @return \Illuminate\Support\Collection
      */
     public function getParameterList()
     {
         $sequenced = collect($this->getSequence());
 
-        // Merge any Defaults
-        if(!empty($this->getDefaults()))
-        {
-            $sequenced = $sequenced->merge($this->getDefaults()->mapWithKeys(function ($input,$key) {
-                return [$key => $key];
-            }));
-        }
         // append the ':' prefix
         $params = collect([]);
         $sequenced->each(function ($input) use ($params){
