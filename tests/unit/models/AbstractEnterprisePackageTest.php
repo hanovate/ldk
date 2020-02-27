@@ -30,26 +30,29 @@ class AbstractEnterprisePackageTest extends TestCase
         $this->assertTrue(class_exists('Unmit\ldk\Models\EnterprisePackageBaseModel'));
     }
 
-    public function testConstruction()
+    public function test_Construction()
     {
         $this->assertObjectHasAttribute('declarations', $this->pckgModel);
         $this->assertObjectHasAttribute('package', $this->pckgModel);
         $this->assertObjectHasAttribute('procedure', $this->pckgModel);
         $this->assertEquals('schemastring', $this->pckgModel->getSchema());
+        $this->assertEquals('testing', $this->pckgModel->getConnection());
+        $this->assertEquals('TESTPCKG', $this->pckgModel->getPackage());
     }
-//
+
 //    public function testGetParameters()
 //    {
 //        $defaults = ['V_VAL'=> 'valOut','V_VAL1'=> 'valOut1'];
-//        $this->pckgModel->setDefaults($defaults);
+//        $this->pckgModel->setDeclarations($defaults);
 //        $this->assertEqualsCanonicalizing( [
 //            "ID" => ":ID",
 //            "TABLE_TITLE" => ":TABLE_TITLE",
 //            "V_VAL" => ":V_VAL",
 //            "V_VAL1" => ":V_VAL1"
-//            ],$this->pckgModel->getParameterList()->toArray());
+//            ], $this->pckgModel->getParameterList()->toArray());
 //
 //    }
+
 //    public function testGetDeclarations()
 //    {
 //        $declarables = ['V_SUB_DATE_OUT' => 'DATE',
@@ -76,14 +79,14 @@ class AbstractEnterprisePackageTest extends TestCase
 //public function testProcedureStatementWithDefaults()
 //{
 //    $defaults = ['V_VAL'=> 'valDflt'];
-//    $this->pckgModel->setDefaults($defaults);
+//    $this->pckgModel->setDeclarations($defaults);
 //    $this->assertEquals("BEGIN schemastring.TESTPCKG.test_proc(:ID,:TABLE_TITLE,:V_VAL);END;",
 //        $this->pckgModel->getStatementString('test_proc'));
 //}
 //public function testProcedureStatementWithDefaultsAndDeclares()
 //{
 //    $defaults = ['DFLT_VAL'=> 'valDflt'];
-//    $this->pckgModel->setDefaults($defaults);
+//    $this->pckgModel->setDeclarations($defaults);
 //    $declarables = ['DEC_VAL' => 'TYPE(00)'];
 //    $this->pckgModel->setDeclarations($declarables);
 //    $this->assertEquals("DECLARE DEC_VAL TYPE(00);BEGIN schemastring.TESTPCKG.test_proc(:ID,:TABLE_TITLE,:DFLT_VAL,:DEC_VAL);END;",
