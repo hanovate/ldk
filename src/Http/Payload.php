@@ -212,7 +212,7 @@ class Payload
         {
             $output[Payload::LINKS][$type] = $link;
         }
-
+        // @todo: Add limit and offset
         if (empty($this->getErrors())) {
             // data content is found here
             $output[Payload::DATA] = $this->getData();
