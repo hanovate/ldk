@@ -13,8 +13,10 @@
         <env name="APP_KEY" value="base64:yNKZp9sODCwP8tnExzwya0P+WoNhKSY82xY29oEjOdE="/>
     </php>
     <testsuites>
-        <testsuite name="Unit">
-            <directory suffix="Test.php">./tests/Unit</directory>
+        <testsuite name="unit">
+            <directory suffix="Test.php">tests/unit</directory>
+            <directory suffix="Test.php">tests/businessobjects</directory>
+            <directory suffix="Test.php">tests/models</directory>
         </testsuite>
     </testsuites>
     <filter>

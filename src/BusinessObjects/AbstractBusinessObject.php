@@ -46,7 +46,7 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
      */
     public function getNameToBusinessNameArray()
     {
-        return $this->businessNameToBusinessName;
+        return $this->nameToBusinessName;
     }
 
     /**

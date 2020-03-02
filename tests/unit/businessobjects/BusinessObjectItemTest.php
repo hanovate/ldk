@@ -1,17 +1,14 @@
 <?php
 
-namespace Tests\Unit;
+namespace Unmit\ldk\tests\unit\businessobjects;
 
-use Unmit\BusinessObjects\Student\Banner\DualCredit\InstitutionAgreement;
-use Unmit\BusinessObjects\BusinessObjectItem;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Unmit\ldk\tests\unit\TestBO;
+use Unmit\ldk\BusinessObjects\BusinessObjectItem;
+use Unmit\ldk\tests\TestCase;
 
 /**
  * Class: BusinessObjectItemTest
  *
- * Uses Unmit\BusinessObjects\Student\Banner\DualCredit\InstitutionAgreement
- * for testing this class
  *
  * @see TestCase
  */
@@ -21,20 +18,20 @@ class BusinessObjectItemTest extends TestCase
 
     function __construct()
     {
-        $this->obj = new InstitutionAgreement();
+        $this->obj = new TestBO();
         parent::__construct();
     }
 
     public function testPrerequisites()
     {
-        $this->assertTrue(class_exists('Unmit\BusinessObjects\Student\Banner\DualCredit\InstitutionAgreement'));
+        $this->assertTrue(class_exists('Unmit\ldk\tests\Unit\TestBO'));
     }
 
     public function testBusinessObjectItem()
     {
-        $name = 'school code';
-        $bizname = 'hs-code';
-        $columnname = 'szvdist_sbgi_code';
+        $name = 'title';
+        $bizname = 'Title';
+        $columnname = 'UNMTBL_TITLE';
 
         $obj = new BusinessObjectItem($name,$bizname,$columnname);
 
@@ -45,8 +42,8 @@ class BusinessObjectItemTest extends TestCase
 
     public function testReplaceColumnName()
     {
-        $name = 'high school code';
-        $newColumnname = 'v_sbgi_code';
+        $name = 'title';
+        $newColumnname = 'UNMTBL_TITLE';
 
         $this->obj->replaceColumnName($name, $newColumnname);
 
@@ -57,22 +54,22 @@ class BusinessObjectItemTest extends TestCase
     {
 
         // for set & getName()
-        $name = 'school code';
+        $name = 'title';
         // setName($name)
-        $this->obj->getByBusinessName('hs-code')->setName($name);
+        $this->obj->getByBusinessName('Title')->setName($name);
         // getName()
-        $this->assertTrue($this->obj->getByBusinessName('hs-code')->getName() == $name);
+        $this->assertTrue($this->obj->getByBusinessName('Title')->getName() == $name);
 
 
         // for set & getColumnName()
-        $colname = 'szvdist_sbgi_code1';
+        $colname = 'UNMTBL_TITLE';
         // setColumn($column)
-        $this->obj->getByBusinessName('hs-code')->setColumnName($colname);
+        $this->obj->getByBusinessName('Title')->setColumnName($colname);
         // getColumn()
-        $this->assertTrue($this->obj->getByBusinessName('hs-code')->getColumnName() == $colname);
+        $this->assertTrue($this->obj->getByBusinessName('Title')->getColumnName() == $colname);
 
         // for set & getBusinessName()
-        $bizname = 'hs-code-1';
+        $bizname = 'Title';
         // setBusinessName($businessName)
         $this->obj->getByColumnName($colname)->setBusinessName($bizname);
         // getBusinessName()
