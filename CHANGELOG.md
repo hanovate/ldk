@@ -10,6 +10,10 @@ MH = Michael Han <mhan1@unm.edu>
 
 ## [Unreleased]
 
+## [0.1.3] - 2020-03-04 - MH
+### Fixed
+- add '.' for session variable names in APIOAuthHandler.php
+
 ## [0.1.2] - 2020-03-04 - RVE
 ### Added
 - laravel-frontend package (ReactJS components) into ldk

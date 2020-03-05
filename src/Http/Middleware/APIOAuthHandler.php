@@ -55,14 +55,14 @@ class APIOAuthHandler
         // force to use a specific entry in the access database
         // TODO update to use the current login
         $form_params = [
-            'client_id' => config(self::API_CONFIG_PATH . 'client-id'),
-            'client_secret' => config(self::API_CONFIG_PATH . 'client-secret'),
+            'client_id' => config(self::API_CONFIG_PATH . '.client-id'),
+            'client_secret' => config(self::API_CONFIG_PATH . '.client-secret'),
             'grant_type' => 'client_credentials',
             'scope' => '*'
         ];
 
         // parse the API_BASE_URL for just the host name
-        $parsed = parse_url(config(self::API_CONFIG_PATH.'base-url'));
+        $parsed = parse_url(config(self::API_CONFIG_PATH.'.base-url'));
         $request_url = $parsed['scheme'].'://'.$parsed['host'] . self::OAUTH_URI;
 
         // make the request
@@ -71,9 +71,11 @@ class APIOAuthHandler
             $request_url,
             [
                 'form_params' => $form_params,
+                // /*
                 'verify'  => (((\App::environment(['local','staging'])) &&
-                    (request()->getHttpHost()=='core.unm.edu')) ?
-                        (resource_path().'/data/rootCA.pem'):'') // DEBUG added to accommodate for when application is running on oraapi02 server
+                    (request()->getHttpHost()=='oraapi02d.unm.edu')) ?
+                    ('/etc/ssl/certs/ssl_cert-key.pem'):'') // DEBUG added to accommodate for when application is running on oraapi02 server
+                    // */
             ]
         );
 
