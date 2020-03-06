@@ -10,6 +10,10 @@ MH = Michael Han <mhan1@unm.edu>
 
 ## [Unreleased]
 
+## [0.1.4] - 2020-03-05 - MH
+### Added
+- updated resources/* with latest components and files
+
 ## [0.1.3] - 2020-03-04 - MH
 ### Fixed
 - add '.' for session variable names in APIOAuthHandler.php

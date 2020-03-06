@@ -59,6 +59,21 @@ Now, the“composer.json” file for every Laravel application is present in the
     },
 ```
 
+4. Frontend package set up
+```$ npm i react-hooks-async react-icons react-js-pagination react-scripts use-memo-one
+
+
+## Configurations
+./config/app-extra.php:
+
+e.g.
+rest-api => [
+    client-id => 4,
+    client-secret => 'pGJCESG5oofEyoroeo9oQogFXFbnDolI1dyzHILd',
+    base-url => ''
+];
+
+
 ##  User Documentation
 
 [Laravel Development Kit (LDK) Dashboard](http://https://confluence.unm.edu/display/APPGS/APP+-+Laravel+Development+Kit+%28LDK%29+Dashboard "APPS - Laravel Development Kit (LDK) Dashboard")

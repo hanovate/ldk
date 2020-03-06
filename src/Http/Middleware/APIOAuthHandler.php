@@ -9,6 +9,7 @@ use Closure;
  *
  * @author Michael Han <mhan1@unm.edu>
  * @author Ronald V Estrada <rvestra@unm.edu>
+ *
  * @version 0.1.0 initial write-up 2019-10-23 MH
  * @since 0.2.1
  */

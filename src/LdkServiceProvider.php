@@ -16,7 +16,8 @@ class LdkServiceProvider extends ServiceProvider {
             __DIR__.'/../resources/images' => resource_path('images/'),
             __DIR__.'/../resources/sass' => resource_path('unm_sass/'),
             __DIR__.'/../resources/js' => resource_path('js/'),
-            __DIR__.'/../resources/js/components' => resource_path('js/components/')
+            __DIR__.'/../resources/js/components' => resource_path('js/components/'),
+            __DIR__.'/../resources/js/main' => base_path()
         ]);
     }
     public function register()
