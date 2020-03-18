@@ -10,6 +10,10 @@ MH = Michael Han <mhan1@unm.edu>
 
 ## [Unreleased]
 
+## [0.1.5] - 2020-03-18 - MH
+### Added
+- accommodation for the TLS and certificate setup to use coa.unm.edu endpoint from the app itself
+
 ## [0.1.4] - 2020-03-05 - MH
 ### Added
 - updated resources/* with latest components and files

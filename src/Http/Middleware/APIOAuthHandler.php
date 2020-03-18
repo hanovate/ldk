@@ -1,5 +1,4 @@
 <?php
-
 namespace Unmit\ldk\Http\Middleware;
 
 use Closure;
@@ -73,12 +72,19 @@ class APIOAuthHandler
             [
                 'form_params' => $form_params,
                 // /*
+                // following lines added to accommodate servers w/ https
+                //
                 'verify'  => (((\App::environment(['local','staging'])) &&
+                    (request()->getHttpHost()=='coa.unm.edu')) ?
+                    ('/etc/ssl/certs/_wildcard.unm.edu+3.pem')
+                    :(((\App::environment(['local','staging'])) &&
                     (request()->getHttpHost()=='oraapi02d.unm.edu')) ?
-                    ('/etc/ssl/certs/ssl_cert-key.pem'):'') // DEBUG added to accommodate for when application is running on oraapi02 server
+                    ('/etc/ssl/certs/ssl_key.pem'):''))
                     // */
             ]
         );
+
+        // dd('testing');
 
         // get the response and store the returned values into session variables
         $response->getBody();
