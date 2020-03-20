@@ -32,7 +32,7 @@ class APIOAuthHandler
     {
         // pass through if token has been obtained already
         if (session()->has('api.' . self::ACCESS_TOKEN)) {
-            // return $next($request);
+            return $next($request);
         }
 
         // pass through if token was previously saved and it hasn't expired
@@ -40,11 +40,9 @@ class APIOAuthHandler
             $saved_apitoken = unserialize(file_get_contents(storage_path() . '/' . self::APITOKEN));
             $current_ut = time();
             if ($current_ut<$saved_apitoken[self::EXPIRES_AT]) {
-                /*
                 session()->push('api.' . self::TOKEN_TYPE, $saved_apitoken[self::TOKEN_TYPE] ?? null);
                 session()->push('api.' . self::ACCESS_TOKEN, $saved_apitoken[self::ACCESS_TOKEN] ?? null);
                 return $next($request);
-                 */
             }
         }
 
@@ -88,8 +86,6 @@ class APIOAuthHandler
                 'verify'  => $verify
             ]
         );
-
-        // dd('testing');
 
         // get the response and store the returned values into session variables
         $response->getBody();
