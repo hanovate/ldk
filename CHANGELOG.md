@@ -10,6 +10,10 @@ MH = Michael Han <mhan1@unm.edu>
 
 ## [Unreleased]
 
+## [0.1.6] - 2020-03-19 - MH
+### Updated
+- formalize https verify vars via app-extra.php config var in OAuth middleware
+
 ## [0.1.5] - 2020-03-18 - MH
 ### Added
 - accommodation for the TLS and certificate setup to use coa.unm.edu endpoint from the app itself

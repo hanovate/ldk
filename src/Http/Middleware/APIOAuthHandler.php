@@ -46,6 +46,7 @@ class APIOAuthHandler
             }
         }
 
+
         // since a token has not been obtained for this session
         // get one through Guzzle client
 
@@ -65,26 +66,26 @@ class APIOAuthHandler
         $parsed = parse_url(config(self::API_CONFIG_PATH.'.base-url'));
         $request_url = $parsed['scheme'].'://'.$parsed['host'] . self::OAUTH_URI;
 
+        // accommodate for various development
+        $verify = false;
+        if (\App::environment(['local','staging'])) {
+            if ($certvars = config('app-extra.localcerts',false)) {
+                $tmp = array_keys($certvars);
+                if (in_array($hostname = request()->getHttpHost(),$tmp)) {
+                    $verify = $certvars[$hostname];
+                }
+            }
+        }
+
         // make the request
         $response = $client->request(
             'POST',
             $request_url,
             [
                 'form_params' => $form_params,
-                // /*
-                // following lines added to accommodate servers w/ https
-                //
-                'verify'  => (((\App::environment(['local','staging'])) &&
-                    (request()->getHttpHost()=='coa.unm.edu')) ?
-                    ('/etc/ssl/certs/_wildcard.unm.edu+3.pem')
-                    :(((\App::environment(['local','staging'])) &&
-                    (request()->getHttpHost()=='oraapi02d.unm.edu')) ?
-                    ('/etc/ssl/certs/ssl_key.pem'):''))
-                    // */
+                'verify'  => $verify
             ]
         );
-
-        // dd('testing');
 
         // get the response and store the returned values into session variables
         $response->getBody();
