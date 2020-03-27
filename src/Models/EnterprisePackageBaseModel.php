@@ -42,6 +42,7 @@ class EnterprisePackageBaseModel
     private $procedure;
     private $connection;
     protected $parsedStmt;
+    private $bindings;
 
     public function __construct($schema = null, $connection = null)
     {
@@ -262,6 +263,7 @@ class EnterprisePackageBaseModel
     {
         if(isset($this->parsedStmt))
         {
+            $this->bindings[] = &$variable;
             return oci_bind_by_name($this->parsedStmt, $parameter, $variable, $maxLength, $ociType);
         }
         throw new Oci8Exception(__CLASS__."-".__METHOD__.": Could not bind parameter because invalid statement used");
@@ -281,7 +283,7 @@ class EnterprisePackageBaseModel
         $result = @oci_execute($this->parsedStmt, $mode);
 
         if ($result != true) {
-            $e = oci_error($this->sth);
+            $e = oci_error($this->parsedStmt);
 
             $message = '';
             $message = $message . 'Error Code    : ' . $e['code'] . PHP_EOL;
@@ -294,5 +296,25 @@ class EnterprisePackageBaseModel
         }
 
         return $result;
+    }
+    /**
+     * Special oci function to format display of query bindings.
+     *
+     * @return string
+     */
+    private function displayBindings()
+    {
+        $bindings = [];
+        foreach ($this->bindings as $binding) {
+            if (is_object($binding)) {
+                $bindings[] = get_class($binding);
+            } elseif (is_array($binding)) {
+                $bindings[] = 'Array';
+            } else {
+                $bindings[] = (string) $binding;
+            }
+        }
+
+        return implode(',', $bindings);
     }
 }

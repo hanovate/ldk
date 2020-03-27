@@ -10,6 +10,11 @@ MH = Michael Han <mhan1@unm.edu>
 
 ## [Unreleased]
 
+## [0.1.7] - 2020-03-26 - RVE
+### Fixed
+- Issue 1317 - package calls with ORM inaccurate results
+- EnterpriseBasePckgModel how using OCI8 php
+
 ## [0.1.6] - 2020-03-19 - MH
 ### Updated
 - formalize https verify vars via app-extra.php config var in OAuth middleware
