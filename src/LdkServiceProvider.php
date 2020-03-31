@@ -2,6 +2,7 @@
 namespace Unmit\ldk;
 
 use Illuminate\Support\ServiceProvider;
+use Unmit\ldk\Helpers\OauthClient;
 
 class LdkServiceProvider extends ServiceProvider {
     public function boot()
@@ -22,6 +23,9 @@ class LdkServiceProvider extends ServiceProvider {
     }
     public function register()
     {
+        $this->app->bind(OauthClient::class, function() {
+            return new OauthClient();
+        });
     }
 
 }
