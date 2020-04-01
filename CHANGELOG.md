@@ -10,6 +10,13 @@ MH = Michael Han <mhan1@unm.edu>
 
 ## [Unreleased]
 
+## [0.1.8] - 2020-04-01 - RVE
+### Added
+- OauthClient Helper
+### Removed
+- ApiModel
+
+
 ## [0.1.7] - 2020-03-26 - RVE
 ### Fixed
 - Issue 1317 - package calls with ORM inaccurate results
