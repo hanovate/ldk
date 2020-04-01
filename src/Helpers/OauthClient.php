@@ -6,6 +6,7 @@ use Exception;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Client;
 use InvalidArgumentException;
+use Laravel\Passport\Exceptions\OAuthServerException;
 
 /**
  * Class: OauthClient
@@ -23,17 +24,19 @@ class OauthClient
     const ACCESS_TOKEN ='access_token';
     const EXPIRES_AT = 'expires_at';
 
+    const CONTENT_TYPE = 'Content-Type';
+    const AUTHORIZATION = 'Authorization';
+
     const GET = 'GET';
     const PATCH = 'PATCH';
     const DELETE = 'DELETE';
     const PUT = 'PUT';
     const POST = 'POST';
     const CONFIG_PATH = 'app-extra';
-
     /**
      * @var
      */
-    private $hostname;
+    private $service;
 
     protected $httpClient;
     /**
@@ -43,31 +46,30 @@ class OauthClient
      */
 
     private $httpRequest;
-
-    const CONTENT_TYPE = 'Content-Type';
+    private $tokenStorage;
 
     /**
      * @return mixed
      */
-    public function getHostname()
+    public function getService()
     {
-        return $this->hostname;
+        return $this->service;
     }
 
     /**
-     * @param mixed $hostname
+     * @param mixed $service
      */
-    public function setHostname($hostname)
+    public function setService($service)
     {
-        if(is_null($hostname))
-            throw new \http\Exception\InvalidArgumentException(__CLASS__.__METHOD__.": Hostname cannot be null");
+        if(is_null($service))
+            throw new \http\Exception\InvalidArgumentException(__CLASS__.__METHOD__.": Service cannot be null");
         // set URI-related attributes in a logical order
-        $this->setHostname($hostname);
+        $this->service = $service;
 
         // instantiate $this->httpClient to GuzzleHttp\Client
-        $this->setHttpClient(new Client(['base_uri' => config(OauthClient::CONFIG_PATH . $hostname . '.base-url',null)]));
+        $this->setHttpClient(new Client(['base_uri' => config($this->getRestConfigPath() . '.base-url',null)]));
         if(!$this->sessionCheck())
-            throw new ClientException(__CLASS__ . __METHOD__. ": Authorization failed for " . $hostname);
+            throw new ClientException(__CLASS__ . __METHOD__. ": Authorization failed for " . $service);
     }
     /**
      * @return Client
@@ -85,24 +87,15 @@ class OauthClient
         $this->httpClient = $httpClient;
     }
 
-
     /**
      * @return bool
      */
     public function sessionCheck()
     {
         // pass through if token has been obtained already
-        if (session()->has($this->getHostname().'.api.' . self::ACCESS_TOKEN)) {
-            return true;
-        }
-
-        // pass through if token was previously saved and it hasn't expired
-        if (file_exists(storage_path() . '/' . self::APITOKEN)) {
-            $saved_apitoken = unserialize(file_get_contents(storage_path() . '/' . self::APITOKEN));
-            $current_ut = time();
-            if ($current_ut<$saved_apitoken[self::EXPIRES_AT]) {
-                session()->push($this->getHostname().'.api.' . self::TOKEN_TYPE, $saved_apitoken[self::TOKEN_TYPE] ?? null);
-                session()->push($this->getHostname().'.api.' . self::ACCESS_TOKEN, $saved_apitoken[self::ACCESS_TOKEN] ?? null);
+        if (session()->has($this->getService().'.api.' . self::ACCESS_TOKEN)) {
+            if($this->isFresh())
+            {
                 return true;
             }
         }
@@ -110,6 +103,40 @@ class OauthClient
         // since a token has not been obtained for this session get one
 
         return $this->authorize();
+    }
+    /**
+     * @return bool
+     */
+    public function getCertificates()
+    {
+        // accommodate for various development
+        $verify = false;
+        if (\App::environment(['local','staging'])) {
+            if ($certvars = config(self::CONFIG_PATH.'.localcerts',false)) {
+                $tmp = array_keys($certvars);
+                if (in_array($host = request()->getHttpHost(),$tmp)) {
+                    $verify = $certvars[$host];
+                }
+            }
+        }
+
+        return $verify;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHeaders(): array
+    {
+        if (session()->has($this->getService().'.api.' . self::ACCESS_TOKEN)) {
+            $session = session()->get($this->getService());
+            $token = array_pop($session);
+        }
+        else{
+            throw OAuthServerException::invalidRequest('Access token is invalid, expired, or unusable');
+        }
+        //$this->refreshAccessToken();
+        return [self::AUTHORIZATION => $token[self::TOKEN_TYPE].' '.$token[self::ACCESS_TOKEN], self::CONTENT_TYPE => 'application/json'];
     }
 
     public function authorize()
@@ -120,26 +147,18 @@ class OauthClient
         // force to use a specific entry in the access database
         // TODO update to use the current login
         $form_params = [
-            'client_id' => config(self::CONFIG_PATH . $this->getHostname() . '.client-id'),
-            'client_secret' => config(self::CONFIG_PATH . $this->getHostname() . '.client-secret'),
+            'client_id' => config($this->getRestConfigPath() . '.client-id'),
+            'client_secret' => config($this->getRestConfigPath() . '.client-secret'),
             'grant_type' => 'client_credentials',
             'scope' => '*'
         ];
-
-        // parse the API_BASE_URL for just the host name
-        $parsed = parse_url(config(self::CONFIG_PATH. $this->getHostname() . '.base-url'));
-        $request_url = $parsed['scheme'].'://'.$parsed['host'] . config(self::CONFIG_PATH . $this->getHostname() . '.auth_uri');
+    // parse the API_BASE_URL for just the host name
+        $parsed = parse_url(config($this->getRestConfigPath() . '.base-url'));
+        $request_url = $parsed['scheme'].'://'.$parsed['host'] . config($this->getRestConfigPath() . '.auth-uri');
 
         // accommodate for various development
         $verify = false;
-        if (\App::environment(['local','staging'])) {
-            if ($certvars = config(self::CONFIG_PATH.'.localcerts',false)) {
-                $tmp = array_keys($certvars);
-                if (in_array($host = request()->getHttpHost(),$tmp)) {
-                    $verify = $certvars[$this->getHostname()];
-                }
-            }
-        }
+        $verify = $this->getCertificates();
 
         // make the request
         $response = $client->request(
@@ -159,14 +178,35 @@ class OauthClient
         $response_array[self::EXPIRES_AT] = time() + $response_array['expires_in'];
 
         // store
-        session()->push($this->getHostname().'.api.' . self::TOKEN_TYPE, $response_array[self::TOKEN_TYPE] ?? null);
-        session()->push($this->getHostname().'.api.' . self::ACCESS_TOKEN, $response_array[self::ACCESS_TOKEN] ?? null);
+        session()->put($this->getService().'.api.' . self::TOKEN_TYPE, $response_array[self::TOKEN_TYPE] ?? null);
+        session()->put($this->getService().'.api.' . self::ACCESS_TOKEN, $response_array[self::ACCESS_TOKEN] ?? null);
 
         // save the newly obtained token in a file
+        if (!is_dir($this->getTokenStorage() )) {
+            // dir doesn't exist, make it
+            mkdir( $this->getTokenStorage());
+        }
 
-        file_put_contents(storage_path() . '/' . self::APITOKEN, serialize($response_array));
+        file_put_contents($this->getTokenStorage() . '/' . self::APITOKEN, serialize($response_array));
 
         return true;
+    }
+
+    public function isFresh()
+    {
+        // pass through if token was previously saved and it hasn't expired
+        $savedFilename = $this->getTokenStorage();
+
+        if (file_exists($savedFilename)) {
+            $saved_apitoken = unserialize(file_get_contents($savedFilename));
+            $current_ut = time();
+            if ($current_ut<$saved_apitoken[self::EXPIRES_AT]) {
+                session()->push($this->getService().'.api.' . self::TOKEN_TYPE, $saved_apitoken[self::TOKEN_TYPE] ?? null);
+                session()->push($this->getService().'.api.' . self::ACCESS_TOKEN, $saved_apitoken[self::ACCESS_TOKEN] ?? null);
+                return true;
+            }
+        }
+        return false;
     }
     /**
      * Get a response using an id, if an id is not provided the result should be many.
@@ -219,11 +259,12 @@ class OauthClient
      * @param  $id
      * @return
      */
-    public function get($url) : \Illuminate\Support\Collection
+    public function get($url)
     {
         $response = null;
-        $response = $this->httpClient->get($url);
-        return $this->responseToCollection($response);
+        $opts = ['verify' => $this->getCertificates(),'headers' => $this->getHeaders()];
+        $response = $this->httpClient->get($url,$opts);
+        return json_decode($response->getBody());
     }
 
     /**
@@ -323,7 +364,22 @@ class OauthClient
     public function getWhere($url,array $where)
     {
         $response = $this->httpClient->get($url, ['query' => $where]);
-        return $this->responseToCollection($response);
+        return json_decode($response->getBody());
+    }
+
+    /**
+     * @return mixed
+     */
+    private function getTokenStorage()
+    {
+        return storage_path() . '/' . $this->getService();
+    }
+    /**
+     * @return mixed
+     */
+    private function getRestConfigPath()
+    {
+        return OauthClient::CONFIG_PATH . '.rest-api.' . $this->getService();
     }
 
 }
