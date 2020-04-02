@@ -10,6 +10,10 @@ MH = Michael Han <mhan1@unm.edu>
 
 ## [Unreleased]
 
+## [0.1.9] - 2020-04-01 MH
+### Fixed
+- OauthClient helper
+
 ## [0.1.8] - 2020-04-01 - RVE
 ### Added
 - OauthClient Helper

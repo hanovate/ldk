@@ -112,7 +112,7 @@ class OauthClient
         // accommodate for various development
         $verify = false;
         if (\App::environment(['local','staging'])) {
-            if ($certvars = config(self::CONFIG_PATH.'.localcerts',false)) {
+            if ($certvars = config($this->getRestConfigPath().'.'.$this->getService().'.cert',false)) {
                 $tmp = array_keys($certvars);
                 if (in_array($host = request()->getHttpHost(),$tmp)) {
                     $verify = $certvars[$host];
@@ -152,7 +152,7 @@ class OauthClient
             'grant_type' => 'client_credentials',
             'scope' => '*'
         ];
-    // parse the API_BASE_URL for just the host name
+        // parse the API_BASE_URL for just the host name
         $parsed = parse_url(config($this->getRestConfigPath() . '.base-url'));
         $request_url = $parsed['scheme'].'://'.$parsed['host'] . config($this->getRestConfigPath() . '.auth-uri');
 
@@ -182,12 +182,14 @@ class OauthClient
         session()->put($this->getService().'.api.' . self::ACCESS_TOKEN, $response_array[self::ACCESS_TOKEN] ?? null);
 
         // save the newly obtained token in a file
-        if (!is_dir($this->getTokenStorage() )) {
-            // dir doesn't exist, make it
-            mkdir( $this->getTokenStorage());
+        if (!file_exists($tmp = $this->getTokenStorage() )) {
+            $folder = substr($tmp,0,strrpos($tmp,'/'));
+            if (!file_exists($folder)) {
+                mkdir($folder);
+            }
         }
 
-        file_put_contents($this->getTokenStorage() . '/' . self::APITOKEN, serialize($response_array));
+        file_put_contents($this->getTokenStorage(), serialize($response_array));
 
         return true;
     }
@@ -201,8 +203,8 @@ class OauthClient
             $saved_apitoken = unserialize(file_get_contents($savedFilename));
             $current_ut = time();
             if ($current_ut<$saved_apitoken[self::EXPIRES_AT]) {
-                session()->push($this->getService().'.api.' . self::TOKEN_TYPE, $saved_apitoken[self::TOKEN_TYPE] ?? null);
-                session()->push($this->getService().'.api.' . self::ACCESS_TOKEN, $saved_apitoken[self::ACCESS_TOKEN] ?? null);
+                session()->put($this->getService().'.api.' . self::TOKEN_TYPE, $saved_apitoken[self::TOKEN_TYPE] ?? null);
+                session()->put($this->getService().'.api.' . self::ACCESS_TOKEN, $saved_apitoken[self::ACCESS_TOKEN] ?? null);
                 return true;
             }
         }
@@ -372,7 +374,7 @@ class OauthClient
      */
     private function getTokenStorage()
     {
-        return storage_path() . '/' . $this->getService();
+        return storage_path() . '/' . $this->getService().'/'.self::APITOKEN;
     }
     /**
      * @return mixed
