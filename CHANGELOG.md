@@ -10,6 +10,11 @@ MH = Michael Han <mhan1@unm.edu>
 
 ## [Unreleased]
 
+## [0.1.10] - 2020-04-03 RVE
+### Fixed
+- Issue 1630 - empty column left out getSqlSelectItems()
+
+
 ## [0.1.9] - 2020-04-01 MH
 ### Fixed
 - OauthClient helper
