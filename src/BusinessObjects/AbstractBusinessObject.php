@@ -222,13 +222,16 @@ abstract class AbstractBusinessObject implements BusinessObjectInterface
         $selectItems = array();
         foreach ($this->getNameToColumnNameArray() as $name=>$column)
         {
-            if($useAliases)
+            if(!empty(trim($column)))
             {
-                $selectItems[] .= $column.BusinessObjectItem::_AS_.$name;
-            }
-            else
-            {
-                $selectItems[] .= $column;
+                if($useAliases)
+                {
+                    $selectItems[] .= $column.BusinessObjectItem::_AS_.$name;
+                }
+                else
+                {
+                    $selectItems[] .= $column;
+                }
             }
         }
         return $selectItems;
