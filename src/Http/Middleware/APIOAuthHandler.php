@@ -98,7 +98,7 @@ class APIOAuthHandler
         session()->push('api.' . self::ACCESS_TOKEN, $response_array[self::ACCESS_TOKEN] ?? null);
 
         // save the newly obtained token in a file
-        if (!file_exists($tmp = $this->getTokenStorage() )) {
+        if (!file_exists($tmp = storage_path() . '/default/' )) {
             $folder = substr($tmp,0,strrpos($tmp,'/'));
             if (!file_exists($folder)) {
                 mkdir($folder);
