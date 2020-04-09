@@ -19,7 +19,7 @@ class APIOAuthHandler
     const ACCESS_TOKEN ='access_token';
     const OAUTH_URI = '/oauth/token';
     const EXPIRES_AT = 'expires_at';
-    const API_CONFIG_PATH = 'app-extra.rest-api';
+    const API_CONFIG_PATH = 'app-extra.rest-api.default';
 
     /**
      * Handle an incoming request.
@@ -36,8 +36,8 @@ class APIOAuthHandler
         }
 
         // pass through if token was previously saved and it hasn't expired
-        if (file_exists(storage_path() . '/' . self::APITOKEN)) {
-            $saved_apitoken = unserialize(file_get_contents(storage_path() . '/' . self::APITOKEN));
+        if (file_exists(storage_path() . '/default/' . self::APITOKEN)) {
+            $saved_apitoken = unserialize(file_get_contents(storage_path() . '/default/' . self::APITOKEN));
             $current_ut = time();
             if ($current_ut<$saved_apitoken[self::EXPIRES_AT]) {
                 session()->push('api.' . self::TOKEN_TYPE, $saved_apitoken[self::TOKEN_TYPE] ?? null);
@@ -69,14 +69,13 @@ class APIOAuthHandler
         // accommodate for various development
         $verify = false;
         if (\App::environment(['local','staging'])) {
-            if ($certvars = config('app-extra.localcerts',false)) {
+            if ($certvars = config(self::API_CONFIG_PATH.'.localcerts',false)) {
                 $tmp = array_keys($certvars);
                 if (in_array($hostname = request()->getHttpHost(),$tmp)) {
                     $verify = $certvars[$hostname];
                 }
             }
         }
-
         // make the request
         $response = $client->request(
             'POST',
@@ -99,7 +98,14 @@ class APIOAuthHandler
         session()->push('api.' . self::ACCESS_TOKEN, $response_array[self::ACCESS_TOKEN] ?? null);
 
         // save the newly obtained token in a file
-        file_put_contents(storage_path() . '/' . self::APITOKEN, serialize($response_array));
+        if (!file_exists($tmp = $this->getTokenStorage() )) {
+            $folder = substr($tmp,0,strrpos($tmp,'/'));
+            if (!file_exists($folder)) {
+                mkdir($folder);
+            }
+        }
+        // save the newly obtained token in a file
+        file_put_contents(storage_path() . '/default/' . self::APITOKEN, serialize($response_array));
 
         return $next($request);
     }

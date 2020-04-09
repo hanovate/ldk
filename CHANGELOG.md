@@ -10,6 +10,10 @@ MH = Michael Han <mhan1@unm.edu>
 
 ## [Unreleased]
 
+## [0.1.11] - 2020-04-03 RVE
+### Fixed
+- Issue 1714 - Config changed and need to update APIOAuthHandler
+
 ## [0.1.10] - 2020-04-03 RVE
 ### Fixed
 - Issue 1630 - empty column left out getSqlSelectItems()
